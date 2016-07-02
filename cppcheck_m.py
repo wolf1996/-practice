@@ -4,6 +4,7 @@
 
 import subprocess
 import logging
+import xml.etree.ElementTree as xmlt
 import exceptions
 import interface
 
@@ -70,3 +71,15 @@ class CppCheck(interface.Interface):
                 buf_str += i
         self.logger.info("return code is %d", retcode)
         result.close()
+        xml = xmlt.parse("res")
+        errors = xml.iter("error")
+        err_arr = []
+        for i in errors:
+            err = {}
+            err.update(i.attrib)
+            loc = {}
+            j = i.find("location")
+            loc.update(j.attrib)
+            err.update({"location": loc})
+            err_arr.append(err)
+        print(err_arr)
