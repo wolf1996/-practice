@@ -24,6 +24,22 @@ class CppCheck(interface.Interface):
         self.logger = logging.getLogger(__name__)
         self.logger.info("cppcheck module inited")
 
+    @staticmethod
+    def __load_file__(path):
+        xml = xmlt.parse(path)
+        errors = xml.iter("error")
+        err_arr = []
+        for i in errors:
+            err = {}
+            err.update(i.attrib)
+            loc = {}
+            if i:
+                j = i.find("location")
+            loc.update(j.attrib)
+            err.update({"location": loc})
+            err_arr.append(err)
+        return err_arr
+
     def get_res(self, path):
         """
             return result of analysis code from 'path'
@@ -35,7 +51,7 @@ class CppCheck(interface.Interface):
         cmd += self.get_conf()["flags"].split(',')
         for i in conf:
             if i != "flags":
-                cmd.append(i + '=' + conf[i])
+                cmd.append("--{0}={1}".format( i, conf[i]))
         cmd.append("--xml-version=2")
         cmd.append(path)
         # формирование строкового эквивалента комманды
@@ -71,15 +87,5 @@ class CppCheck(interface.Interface):
                 buf_str += i
         self.logger.info("return code is %d", retcode)
         result.close()
-        xml = xmlt.parse("res")
-        errors = xml.iter("error")
-        err_arr = []
-        for i in errors:
-            err = {}
-            err.update(i.attrib)
-            loc = {}
-            j = i.find("location")
-            loc.update(j.attrib)
-            err.update({"location": loc})
-            err_arr.append(err)
+        err_arr = CppCheck.__load_file__("res")
         print(err_arr)
