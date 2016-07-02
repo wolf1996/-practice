@@ -51,7 +51,7 @@ class CppCheck(interface.Interface):
         cmd += self.get_conf()["flags"].split(',')
         for i in conf:
             if i != "flags":
-                cmd.append("--{0}={1}".format( i, conf[i]))
+                cmd.append("--{0}={1}".format(i, conf[i]))
         cmd.append("--xml-version=2")
         cmd.append(path)
         # формирование строкового эквивалента комманды
