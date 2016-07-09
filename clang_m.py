@@ -1,8 +1,10 @@
 """
     clang interface
 """
+
 import subprocess
 import logging
+import os.path as opath
 import interface
 
 class Clang(interface.Interface):
@@ -47,17 +49,27 @@ class Clang(interface.Interface):
                     cmd.append(conf[i])
         cmd.append("-plist")
         cmd.append("-o")
-        cmd.append("clangres")
+        cmd.append(opath.abspath("./clangres"))
         if "configcommand" in conf:
             confcmd = cmd.copy()
-            confcmd.append(conf["configcommand"].replace("{PATH}", path))
+            confcmd.append(conf["configcommand"])
             cmd_str = ""
             for i in confcmd:
                 cmd_str += i
                 cmd_str += " "
+            outfile = open("outc_clang", "w+")
+            errfile = open("errc_clang", "w+")
             self.logger.debug("scan-build config command: " + cmd_str)
-            proc = subprocess.Popen(confcmd)
+            proc = subprocess.Popen(confcmd, cwd=path, stdout=outfile, stderr=errfile)
             proc.wait()
+            retcode = proc.returncode
+            for i in outfile:
+                self.logger.info(i)
+            for i in errfile:
+                self.logger.error(i)
+            self.logger.info("config return code is %d", retcode)
+            outfile.close()
+            errfile.close()
         if "makecommand" in conf:
             cmd.append(conf["makecommand"])
         else:
@@ -69,8 +81,21 @@ class Clang(interface.Interface):
             cmd_str += " "
         self.logger.debug("scan-build command: " + cmd_str)
         # запуск процесса
-        proc = subprocess.Popen(cmd)
+        proc = subprocess.Popen(cmd, cwd=path)
         proc.wait()
+        outfile = open("out_clang", "w+")
+        errfile = open("err_clang", "w+")
+        self.logger.debug("scan-build config command: " + cmd_str)
+        proc = subprocess.Popen(confcmd, cwd=path, stdout=outfile, stderr=errfile)
+        proc.wait()
+        retcode = proc.returncode
+        for i in outfile:
+            self.logger.info(i)
+        for i in errfile:
+            self.logger.error(i)
+        self.logger.info("return code is %d", retcode)
+        outfile.close()
+        errfile.close()
         #buf_str = ""
         # запись вывода в log
         retcode = proc.returncode

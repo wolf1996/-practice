@@ -2,6 +2,7 @@
     cppcheck interface
 """
 
+import re
 import subprocess
 import logging
 import xml.etree.ElementTree as xmlt
@@ -26,6 +27,10 @@ class CppCheck(interface.Interface):
 
     @staticmethod
     def __load_file__(path):
+        """
+            load from file some data in xml format and
+            parse it
+        """
         xml = xmlt.parse(path)
         errors = xml.iter("error")
         err_arr = []
@@ -48,7 +53,8 @@ class CppCheck(interface.Interface):
         conf = self.get_conf()
         # формирование комманды
         cmd = [self.command, ]
-        cmd += self.get_conf()["flags"].split(',')
+        if "flags" in conf:
+            cmd += re.split(", | ", self.get_conf()["flags"])
         for i in conf:
             if i != "flags":
                 cmd.append("--{0}={1}".format(i, conf[i]))
@@ -61,14 +67,15 @@ class CppCheck(interface.Interface):
             cmd_str += " "
         self.logger.debug("cppcheck command: " + cmd_str)
         result = open("res", "w+")
+        output = open("out", "w+")
         # запуск процесса
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=result)
+        proc = subprocess.Popen(cmd, stdout=output, stderr=result)
         proc.wait()
         buf_str = ""
         # запись вывода в log
         retcode = proc.returncode
         if retcode:
-            for j in proc.stdout.read():
+            for j in output.read():
                 i = chr(j)
                 if i == "\n":
                     self.logger.error(buf_str)
@@ -77,7 +84,7 @@ class CppCheck(interface.Interface):
                 else:
                     buf_str += i
             raise exceptions.ExecError("cppcheck error ")
-        for j in proc.stdout.read():
+        for j in output.read():
             i = chr(j)
             if i == "\n":
                 self.logger.info(buf_str)
@@ -88,4 +95,4 @@ class CppCheck(interface.Interface):
         self.logger.info("return code is %d", retcode)
         result.close()
         err_arr = CppCheck.__load_file__("res")
-        print(err_arr)
+        return err_arr
