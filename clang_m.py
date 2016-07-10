@@ -5,6 +5,7 @@
 import datetime
 import subprocess
 import logging
+import os
 import os.path as opath
 import glob
 import plistlib
@@ -32,9 +33,11 @@ class Clang(interface.Interface):
             load from file some data in xml format and
             parse it
         """
-        cur = glob.glob("{}/*.plist".format(path))
+        print(path)
+        cur = glob.glob("{}/**/*.plist".format(path))
         res = []
         for i in cur:
+            print(i)
             with open(i, "rb") as plistfile:
                 obj = plistlib.load(plistfile)
                 if obj["diagnostics"]:
@@ -48,10 +51,16 @@ class Clang(interface.Interface):
         dirname = opath.abspath("./{}".format(dirname))
         return dirname
 
+
+
+#разбить функцию 
+#привести всё к адекватному виду
+#добавить clean
     def get_res(self, path):
         """
             return result of analysis code from 'path'
         """
+        path = opath.abspath(path)
         interface.Interface.get_res(self, path)
         conf = self.get_conf()
         # формирование комманды
@@ -66,12 +75,13 @@ class Clang(interface.Interface):
                 else:
                     cmd.append("--{}".format(i))
                     cmd.append(conf[i])
-        cmd.append("-plist")
+        cmd.append("-plist-html")
         cmd.append("-o")
-        cmd.append(Clang.__get_dir_name__())
+        dirname = Clang.__get_dir_name__()
+        cmd.append(dirname)
         if "configcommand" in conf:
             confcmd = cmd.copy()
-            confcmd.append(conf["configcommand"])
+            confcmd.append(path+'/'+conf["configcommand"])
             cmd_str = ""
             for i in confcmd:
                 cmd_str += i
@@ -79,6 +89,8 @@ class Clang(interface.Interface):
             outfile = open("outc_clang", "w+")
             errfile = open("errc_clang", "w+")
             self.logger.debug("scan-build config command: " + cmd_str)
+            print(path)
+            print(confcmd)
             proc = subprocess.Popen(confcmd, cwd=path, stdout=outfile, stderr=errfile)
             proc.wait()
             retcode = proc.returncode
@@ -90,7 +102,7 @@ class Clang(interface.Interface):
             outfile.close()
             errfile.close()
         if "makecommand" in conf:
-            cmd.append(conf["makecommand"])
+            cmd += conf["makecommand"].split()
         else:
             cmd.append("make")
         # формирование строкового эквивалента комманды
@@ -100,12 +112,11 @@ class Clang(interface.Interface):
             cmd_str += " "
         self.logger.debug("scan-build command: " + cmd_str)
         # запуск процесса
-        proc = subprocess.Popen(cmd, cwd=path)
-        proc.wait()
         outfile = open("out_clang", "w+")
         errfile = open("err_clang", "w+")
-        self.logger.debug("scan-build config command: " + cmd_str)
-        proc = subprocess.Popen(confcmd, cwd=path, stdout=outfile, stderr=errfile)
+        print(path)
+        print(cmd)
+        proc = subprocess.Popen(cmd, cwd=path, stdout=outfile, stderr=errfile)
         proc.wait()
         retcode = proc.returncode
         for i in outfile:
@@ -117,7 +128,6 @@ class Clang(interface.Interface):
         errfile.close()
         #buf_str = ""
         # запись вывода в log
-        retcode = proc.returncode
-        self.logger.info("return code is %d", retcode)
         err_arr = Clang.__load_report__(dirname)
         print(err_arr)
+        return err_arr
