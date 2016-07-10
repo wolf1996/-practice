@@ -2,10 +2,15 @@
     clang interface
 """
 
+import datetime
 import subprocess
 import logging
 import os.path as opath
+import glob
+import plistlib
 import interface
+
+#заменить всё на темповые файлы и директории
 
 class Clang(interface.Interface):
     """
@@ -22,12 +27,26 @@ class Clang(interface.Interface):
         self.logger.info("clang module inited")
 
     @staticmethod
-    def __load_file__(path):
+    def __load_report__(path):
         """
             load from file some data in xml format and
             parse it
         """
-        return {}
+        cur = glob.glob("{}/*.plist".format(path))
+        res = []
+        for i in cur:
+            with open(i, "rb") as plistfile:
+                obj = plistlib.load(plistfile)
+                if obj["diagnostics"]:
+                    res.append(obj)
+        return res
+
+    @staticmethod
+    def __get_dir_name__():
+        timevar = datetime.datetime.now()
+        dirname = timevar.strftime("%d%m%Y_%H%M%S")
+        dirname = opath.abspath("./{}".format(dirname))
+        return dirname
 
     def get_res(self, path):
         """
@@ -49,7 +68,7 @@ class Clang(interface.Interface):
                     cmd.append(conf[i])
         cmd.append("-plist")
         cmd.append("-o")
-        cmd.append(opath.abspath("./clangres"))
+        cmd.append(Clang.__get_dir_name__())
         if "configcommand" in conf:
             confcmd = cmd.copy()
             confcmd.append(conf["configcommand"])
@@ -100,5 +119,5 @@ class Clang(interface.Interface):
         # запись вывода в log
         retcode = proc.returncode
         self.logger.info("return code is %d", retcode)
-        err_arr = []  # CppCheck.__load_file__("res")
+        err_arr = Clang.__load_report__(dirname)
         print(err_arr)
