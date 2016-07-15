@@ -2,6 +2,7 @@
     cppcheck interface
 """
 
+import os.path as opath
 import re
 import subprocess
 import logging
@@ -24,6 +25,18 @@ class CppCheck(interface.Interface):
         self.command = "cppcheck"
         self.logger = logging.getLogger(__name__)
         self.logger.info("cppcheck module inited")
+
+    @staticmethod
+    def __normalize__(elem):
+        elem["message"] = elem["msg"]
+        del elem["msg"]
+        elem["type"] = elem["id"]
+        del elem["id"]
+        elem["location"]["file"] = opath.basename(elem["location"]["file"])
+        elem["location"].update({"col": None})
+        elem.update({"next result" : []})
+        return elem
+
 
     @staticmethod
     def __load_file__(path):
@@ -95,4 +108,5 @@ class CppCheck(interface.Interface):
         self.logger.info("return code is %d", retcode)
         result.close()
         err_arr = CppCheck.__load_file__("res")
-        return err_arr
+        b_err_arr = [CppCheck.__normalize__(i) for i in err_arr]
+        return b_err_arr

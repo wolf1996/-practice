@@ -1,10 +1,10 @@
 """
     base class to all modules
 """
+
 import os.path
 import logging
 import exceptions
-
 
 class Interface():
     """
@@ -17,6 +17,15 @@ class Interface():
         self.__conf = conf
         self.__path = None
         self.logger = logging.getLogger(__name__)
+    
+    @staticmethod
+    def exist(path):
+        """
+            check path valid
+        """
+        if not os.path.exists(path):
+            raise exceptions.ConfigFileError("Path is not exists")
+        return path
 
     def __set_path__(self, path):
         """
@@ -52,13 +61,3 @@ class Interface():
             configurations
         """
         self.__conf = conf
-
-
-    @staticmethod
-    def exist(path):
-        """
-            check path valid
-        """
-        if not os.path.exists(path):
-            raise exceptions.ConfigFileError("Path is not exists")
-        return path

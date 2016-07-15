@@ -19,6 +19,14 @@ class Clang(interface.Interface):
         interface for use clang
     """
 
+    @staticmethod
+    def __normalize__(filename, elem):
+        elem["message"] = elem["description"]
+        del elem["description"]
+        elem["location"]["file"] = opath.basename(filename)
+        elem.update({"next result": []})
+        return elem
+
     def __init__(self, conf):
         """
             build init of clang py interface
@@ -169,7 +177,8 @@ class Clang(interface.Interface):
         if "flags" in conf:
             cmd += self.get_conf()["flags"].split(',')
         for i in conf:
-            if i not in ["flags", "makecommand", "configcommand", "cleancommand"]:
+            if i not in ["flags", "makecommand",
+                         "configcommand", "cleancommand"]:
                 if len(i) == 1:
                     cmd.append("-{}".format(i))
                     cmd.append(conf[i])
@@ -178,13 +187,20 @@ class Clang(interface.Interface):
                     cmd.append(conf[i])
         cmd.append("-plist-html")
         cmd.append("-o")
-        dirname = Clang.__get_dir_name__()
+        # Clang.__get_dir_name__()
+        dirname = Clang.__get_dir_name__()#"/home/ksg/disk_d/labs_2016/practic/ms/practice/14072016_005323/"
         cmd.append(dirname)
         self.__config_command(cmd, path)
         self.__make_command(cmd, path)
         self.__clean_command(cmd, path)
         #buf_str = ""
         # запись вывода в log
-        err_arr = Clang.__load_report__(dirname)
-        print(err_arr)
-        return err_arr
+        pars = Clang.__load_report__(dirname)
+        err_arr = []
+        for i in pars:
+            err_arr += i["diagnostics"]
+        # print(err_arr)
+        #return map(lambda x: Clang.__normalize__(
+        #   pars[0]["files"][0], x), err_arr)
+        res_arr = [Clang.__normalize__(pars[0]["files"][0], i) for i in err_arr]
+        return res_arr

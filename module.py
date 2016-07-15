@@ -25,6 +25,47 @@ class App:
         application class
     """
 
+    @staticmethod
+    def str_elem(elem):
+        """
+            return minimalistic notation of result
+        """
+        res_str = ""
+        res_str += elem["type"] + "\n"
+        res_str += "file :{file} line: {line} col: {col} \n".format(
+            **(elem["location"]))
+        res_str += elem["message"] + "\n"
+        return res_str
+
+    @staticmethod
+    def __cmp_loc(rec1, rec2):
+        loc1 = rec1["location"]
+        loc2 = rec2["location"]
+        res = 1
+        res = (res and (loc1["file"] == loc2["file"]))
+        res = (res and (loc1["line"] == loc2["line"]))
+        res = (res and ((loc1["col"]) or (loc2["col"])))
+        res = (
+            res and (
+                (not loc1["col"]) or (
+                    not loc2["col"]) or (
+                    loc1["col"] == loc2["col"])))
+        return res
+
+    @staticmethod
+    def __merge(array):
+        """
+            merge array of results
+        """
+        merged_arr = []
+        for j in array:
+            if j in merged_arr:
+                pos = merged_arr.index(j)
+                merged_arr[pos]["next result"].append(j)
+            else:
+                merged_arr.append(j)
+        return merged_arr
+
     def __init__(self):
         """
             initialisation of application class
@@ -34,13 +75,13 @@ class App:
         config = configparser.ConfigParser()
         config.read_dict({
             'app': {'logfile': './log.txt',
-                   },
+                    },
         })
         self.__config = config
         self.__def_config = config
         self.__my_conf = self.__config["app"]
         self.__my_def_conf = self.__def_config["app"]
-        #инициализация полей значениями по умолчанию
+        # инициализация полей значениями по умолчанию
         self.logger = None
         self.__analyzers = []
 
@@ -54,10 +95,12 @@ class App:
             self.logger.error("code path '%s' is not exists", path)
             raise exceptions.ConfigFileError("Path is not exists")
         res_array = []
-        #print("analyzers:")
-        #print(self.__analyzers)
+        # print("analyzers:")
+        # print(self.__analyzers)
         for i in self.__analyzers:
-            res_array.append(i.get_res(path))
+            res = i.get_res(path)
+            res_array += res
+        res_array = App.__merge(res_array)
         return res_array
 
     def load_config_from_file(self, path):
@@ -96,7 +139,7 @@ class App:
                 self.__analyzers.append(
                     fabric.Fabric.get_class_instance(i)(
                         self.__config[i]))
-        #print(self.__analyzers)
+        # print(self.__analyzers)
 
     def save_config_to_file(self, path):
         """
@@ -118,7 +161,14 @@ def main():
     parsed = parser.parse_args()
     app_instance = App()
     app_instance.load_config_from_file("test.cfg")
-    app_instance.get_res(parsed.path)
+    res = app_instance.get_res(parsed.path)
+    for i in res:
+        # if "path" in i.keys():
+        #    del i["path"]
+        # print(i)
+        buf = App.str_elem(i)
+        print(buf)
+        print("#######################################")
 
 
 if __name__ == '__main__':
