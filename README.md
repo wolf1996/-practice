@@ -23,13 +23,13 @@ path - путь до анализируемого кода
 ## Пример запуска
 ### комманда запуска 
 
-'''bash
+```bash
    agregator.py --config test.cfg /pathtocode/ 
-'''
+```
 
 ### test.cfg
 
-'''bash
+```
  #Application section
  [app]
  #default logfile log.txt
@@ -46,4 +46,4 @@ path - путь до анализируемого кода
  
  [cppcheck]
  flags = -v 3, -j 8 
-'''
+```
