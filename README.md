@@ -23,13 +23,13 @@ path - путь до анализируемого кода
 ## Пример запуска
 ### комманда запуска 
 
-''' 
+'''bash
    agregator.py --config test.cfg /pathtocode/ 
 '''
 
 ### test.cfg
 
-'''
+'''bash
  #Application section
  [app]
  #default logfile log.txt
