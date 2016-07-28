@@ -23,11 +23,14 @@ path - путь до анализируемого кода
 ## Пример запуска
 ### комманда запуска 
 
-<agregator.py --config test.cfg /pathtocode/ >
+''' 
+   agregator.py --config test.cfg /pathtocode/ 
+'''
 
 ### test.cfg
 
-<#Application section
+'''
+ #Application section
  [app]
  #default logfile log.txt
  logfile = log2.txt
@@ -42,4 +45,5 @@ path - путь до анализируемого кода
  cleancommand = make clean
  
  [cppcheck]
- flags = -v 3, -j 8 >
+ flags = -v 3, -j 8 
+'''
