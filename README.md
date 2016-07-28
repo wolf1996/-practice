@@ -23,7 +23,7 @@ path - путь до анализируемого кода
 ## Пример запуска
 ### комманда запуска 
 
-< agregator.py --config test.cfg /pathtocode/ >
+<agregator.py --config test.cfg /pathtocode/ >
 
 ### test.cfg
 
