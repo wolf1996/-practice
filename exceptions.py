@@ -53,3 +53,15 @@ class ExecError(MyError):
             init error class
         """
         self.message = msg
+
+
+
+class WorkDirError(MyError):
+    """
+        error of programm execution
+    """
+    def __init__(self, msg):
+        """
+            init error class
+        """
+        self.message = msg
