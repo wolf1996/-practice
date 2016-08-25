@@ -1,6 +1,7 @@
 """
     application file
 """
+import shutil
 import configparser
 import argparse
 import os.path
@@ -49,7 +50,7 @@ class App:
             res and (
                 (not loc1["col"]) or (
                     not loc2["col"]) or (
-                    loc1["col"] == loc2["col"])))
+                        loc1["col"] == loc2["col"])))
         return res
 
     @staticmethod
@@ -75,7 +76,7 @@ class App:
         config = configparser.ConfigParser()
         config.read_dict({
             'app': {'logfile': './log.txt',
-                    },
+                   },
         })
         self.__config = config
         self.__def_config = config
@@ -84,11 +85,27 @@ class App:
         # инициализация полей значениями по умолчанию
         self.logger = None
         self.__analyzers = []
+        self.__workdir = '.'
 
     def get_res(self, path):
         """
             get result of analyse
         """
+        curdir = os.getcwd()
+        path = os.path.abspath(path)
+        if self.__workdir != '.':
+            if os.path.exists(self.__workdir):
+                try:
+                    shutil.rmtree(self.__workdir)
+                except Exception:
+                    raise exceptions.WorkDirError(
+                        "can't remove {}".format(self.__workdir))
+            try:
+                os.mkdir(self.__workdir)
+                os.chdir(self.__workdir)
+            except Exception:
+                raise exceptions.WorkDirError(
+                    "can't create {}".format(self.__workdir))
         if self.logger:
             self.logger.info("scaning %s", path)
         if not os.path.exists(path):
@@ -100,7 +117,12 @@ class App:
         for i in self.__analyzers:
             res = i.get_res(path)
             res_array += res
+            print(i.get_report())
         res_array = App.__merge(res_array)
+        try:
+            os.chdir(curdir)
+        except Exception:
+            raise exceptions.WorkDirError("can't create {}".format(curdir))
         return res_array
 
     def load_config_from_file(self, path):
@@ -150,6 +172,13 @@ class App:
         self.__config.write(confile)
         confile.close()
 
+    def set_workdir(self, workdir):
+        self.__workdir = os.path.abspath(workdir)
+        self.logger.info("Working directory was changed to{}".format(workdir))
+
+def get_workdir(self):
+        return self.__workdir
+
 
 def main():
     """
@@ -161,6 +190,7 @@ def main():
     parsed = parser.parse_args()
     app_instance = App()
     app_instance.load_config_from_file("test.cfg")
+    app_instance.set_workdir("./somedir/")
     res = app_instance.get_res(parsed.path)
     for i in res:
         # if "path" in i.keys():
