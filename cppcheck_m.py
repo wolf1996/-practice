@@ -1,7 +1,7 @@
 """
     cppcheck interface
 """
-
+import os
 import os.path as opath
 import re
 import subprocess
@@ -25,6 +25,7 @@ class CppCheck(interface.Interface):
         self.command = "cppcheck"
         self.logger = logging.getLogger(__name__)
         self.logger.info("cppcheck module inited")
+        self.__report = ""
 
     @staticmethod
     def __normalize__(elem):
@@ -109,4 +110,9 @@ class CppCheck(interface.Interface):
         result.close()
         err_arr = CppCheck.__load_file__("res")
         b_err_arr = [CppCheck.__normalize__(i) for i in err_arr]
+        self.__report = "CppCheck finished result in {}".format(os.getcwd())
+        self.logger.info(self.__report)
         return b_err_arr
+
+    def get_report(self):
+        return self.__report
