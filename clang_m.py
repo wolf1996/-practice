@@ -2,6 +2,7 @@
     clang interface
 """
 
+import os
 import copy
 import datetime
 import subprocess
@@ -35,6 +36,7 @@ class Clang(interface.Interface):
         self.command = "scan-build"
         self.logger = logging.getLogger(__name__)
         self.logger.info("clang module inited")
+        self.__report = ""
 
     @staticmethod
     def __load_report__(path):
@@ -83,8 +85,8 @@ class Clang(interface.Interface):
             self.logger.debug("scan-build clean command: " + cmd_str)
             outfile = open("out_clean_clang", "w+")
             errfile = open("err_clean_clang", "w+")
-            print(path)
-            print(cmd)
+            #print(path)
+            #print(cmd)
             proc = subprocess.Popen(
                 cmd, cwd=path, stdout=outfile, stderr=errfile)
             proc.wait()
@@ -116,8 +118,8 @@ class Clang(interface.Interface):
             self.logger.debug("scan-build config command: " + cmd_str)
             outfile = open("out_conf_clang", "w+")
             errfile = open("err_conf_clang", "w+")
-            print(path)
-            print(cmd)
+            #print(path)
+            #print(cmd)
             proc = subprocess.Popen(
                 cmd, cwd=path, stdout=outfile, stderr=errfile)
             proc.wait()
@@ -151,8 +153,8 @@ class Clang(interface.Interface):
         self.logger.debug("scan-build make command: " + cmd_str)
         outfile = open("out_make_clang", "w+")
         errfile = open("err_make_clang", "w+")
-        print(path)
-        print(cmd)
+        #print(path)
+        #print(cmd)
         proc = subprocess.Popen(
             cmd, cwd=path, stdout=outfile, stderr=errfile)
         proc.wait()
@@ -169,7 +171,6 @@ class Clang(interface.Interface):
         """
             return result of analysis code from 'path'
         """
-        path = opath.abspath(path)
         interface.Interface.get_res(self, path)
         conf = self.get_conf()
         # формирование комманды (всё относящееся к анализатору)
@@ -187,20 +188,20 @@ class Clang(interface.Interface):
                     cmd.append(conf[i])
         cmd.append("-plist-html")
         cmd.append("-o")
-        # Clang.__get_dir_name__()
-        dirname = Clang.__get_dir_name__()#"/home/ksg/disk_d/labs_2016/practic/ms/practice/14072016_005323/"
+        dirname = Clang.__get_dir_name__()
         cmd.append(dirname)
         self.__config_command(cmd, path)
         self.__make_command(cmd, path)
         self.__clean_command(cmd, path)
-        #buf_str = ""
         # запись вывода в log
         pars = Clang.__load_report__(dirname)
         err_arr = []
         for i in pars:
             err_arr += i["diagnostics"]
-        # print(err_arr)
-        #return map(lambda x: Clang.__normalize__(
-        #   pars[0]["files"][0], x), err_arr)
         res_arr = [Clang.__normalize__(pars[0]["files"][0], i) for i in err_arr]
+        self.__report = "clang finished result in {}".format(os.getcwd()+dirname)
+        self.logger.info(self.__report)
         return res_arr
+
+    def get_report(self):
+        return self.__report
