@@ -61,3 +61,7 @@ class Interface():
             configurations
         """
         self.__conf = conf
+
+    def get_rep(self):
+        report = "work finished work dir {}".format(os.getcwd())
+        return report
